@@ -7,6 +7,29 @@ import { CreateTrainingSessionDto, ExerciseSetDto, TrainingExerciseDto } from '.
 export class TrainingService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private normalizeExerciseSets(exercise: TrainingExerciseDto): ExerciseSetDto[] {
+    if (exercise.sets?.length) {
+      return exercise.sets;
+    }
+
+    if (exercise.exerciseType === 'CARDIO' || exercise.bodyPart === '有氧') {
+      return [
+        {
+          setIndex: 1,
+          durationSeconds: (exercise.durationMinutes ?? 0) * 60,
+        },
+      ];
+    }
+
+    const setCount = Math.max(1, exercise.setCount ?? 1);
+    return Array.from({ length: setCount }, (_, index) => ({
+      setIndex: index + 1,
+      weightKg: index === 0 ? exercise.topWeightKg ?? exercise.workingWeightKg : exercise.workingWeightKg,
+      reps: 8,
+      rpe: 8,
+    }));
+  }
+
   private summarizeSets(sets: ExerciseSetDto[]) {
     const totalVolume = sets.reduce((sum, item) => sum + (item.weightKg ?? 0) * (item.reps ?? 0), 0);
     const bestWeightKg = sets.reduce((max, item) => Math.max(max, item.weightKg ?? 0), 0);
@@ -21,9 +44,11 @@ export class TrainingService {
 
   private summarizeExercises(exercises: TrainingExerciseDto[]) {
     return exercises.map((exercise) => {
-      const summary = this.summarizeSets(exercise.sets);
+      const sets = this.normalizeExerciseSets(exercise);
+      const summary = this.summarizeSets(sets);
       return {
         ...exercise,
+        sets,
         ...summary,
       };
     });

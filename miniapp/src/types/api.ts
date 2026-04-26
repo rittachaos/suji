@@ -49,6 +49,11 @@ export interface TrainingExercisePayload {
   name: string;
   equipment?: string;
   bodyPart?: string;
+  exerciseType?: 'STRENGTH' | 'CARDIO';
+  workingWeightKg?: number;
+  topWeightKg?: number;
+  setCount?: number;
+  durationMinutes?: number;
   sets: TrainingSetPayload[];
 }
 

@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
@@ -48,6 +49,26 @@ class TrainingExerciseDto {
   @IsOptional()
   @IsString()
   bodyPart?: string;
+
+  @IsOptional()
+  @IsIn(['STRENGTH', 'CARDIO'])
+  exerciseType?: 'STRENGTH' | 'CARDIO';
+
+  @IsOptional()
+  @IsNumber()
+  workingWeightKg?: number;
+
+  @IsOptional()
+  @IsNumber()
+  topWeightKg?: number;
+
+  @IsOptional()
+  @IsInt()
+  setCount?: number;
+
+  @IsOptional()
+  @IsInt()
+  durationMinutes?: number;
 
   @IsArray()
   @ValidateNested({ each: true })

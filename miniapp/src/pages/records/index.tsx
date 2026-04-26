@@ -8,6 +8,13 @@ import { tokens } from '@/utils/design';
 
 type Mode = 'body' | 'training';
 
+type ExerciseDraftConfig = {
+  workingWeightKg?: number;
+  topWeightKg?: number;
+  setCount: number;
+  durationMinutes?: number;
+};
+
 const today = new Date().toISOString().slice(0, 10);
 
 const createEmptyBodyForm = (): BodyRecordPayload => ({
@@ -26,11 +33,77 @@ const createDefaultSet = (setIndex: number): TrainingSetPayload => ({
   note: '',
 });
 
+const setCountOptions = ['1', '2', '3', '4', '5', '6', '7', '8'];
+const durationMinuteOptions = ['10', '15', '20', '30', '40', '45', '60', '75', '90'];
+const exerciseCatalog = [
+  { name: '卧推', equipment: '杠铃', bodyPart: '胸' },
+  { name: '上斜卧推', equipment: '哑铃', bodyPart: '胸' },
+  { name: '绳索夹胸', equipment: '绳索', bodyPart: '胸' },
+  { name: '高位下拉', equipment: '器械', bodyPart: '背' },
+  { name: '杠铃划船', equipment: '杠铃', bodyPart: '背' },
+  { name: '坐姿划船', equipment: '器械', bodyPart: '背' },
+  { name: '肩上推举', equipment: '杠铃', bodyPart: '肩' },
+  { name: '侧平举', equipment: '哑铃', bodyPart: '肩' },
+  { name: '深蹲', equipment: '杠铃', bodyPart: '腿' },
+  { name: '腿举', equipment: '器械', bodyPart: '腿' },
+  { name: '罗马尼亚硬拉', equipment: '杠铃', bodyPart: '腿' },
+  { name: '二头弯举', equipment: '哑铃', bodyPart: '手臂' },
+  { name: '绳索下压', equipment: '绳索', bodyPart: '手臂' },
+  { name: '平板支撑', equipment: '自重', bodyPart: '核心' },
+  { name: '跑步', equipment: '跑步机', bodyPart: '有氧' },
+];
+
+const trainingTemplates: Record<string, Array<{ name: string; equipment: string; bodyPart: string }>> = {
+  胸: [
+    { name: '卧推', equipment: '杠铃', bodyPart: '胸' },
+    { name: '上斜卧推', equipment: '哑铃', bodyPart: '胸' },
+    { name: '绳索夹胸', equipment: '绳索', bodyPart: '胸' },
+  ],
+  背: [
+    { name: '高位下拉', equipment: '器械', bodyPart: '背' },
+    { name: '杠铃划船', equipment: '杠铃', bodyPart: '背' },
+    { name: '坐姿划船', equipment: '器械', bodyPart: '背' },
+  ],
+  肩: [
+    { name: '肩上推举', equipment: '杠铃', bodyPart: '肩' },
+    { name: '侧平举', equipment: '哑铃', bodyPart: '肩' },
+  ],
+  腿: [
+    { name: '深蹲', equipment: '杠铃', bodyPart: '腿' },
+    { name: '腿举', equipment: '器械', bodyPart: '腿' },
+    { name: '罗马尼亚硬拉', equipment: '杠铃', bodyPart: '腿' },
+  ],
+  手臂: [
+    { name: '二头弯举', equipment: '哑铃', bodyPart: '手臂' },
+    { name: '绳索下压', equipment: '绳索', bodyPart: '手臂' },
+  ],
+  核心: [{ name: '平板支撑', equipment: '自重', bodyPart: '核心' }],
+  有氧: [{ name: '跑步', equipment: '跑步机', bodyPart: '有氧' }],
+};
+
+const exerciseNames = exerciseCatalog.map((item) => item.name);
+
+const equipmentWeightRanges: Record<string, { max: number; step: number }> = {
+  杠铃: { max: 320, step: 2.5 },
+  哑铃: { max: 80, step: 2.5 },
+  器械: { max: 200, step: 2.5 },
+  绳索: { max: 120, step: 2.5 },
+  壶铃: { max: 80, step: 2.5 },
+  自重: { max: 60, step: 2.5 },
+};
+
 const createDefaultExercise = (index: number): TrainingExercisePayload => ({
   name: index === 0 ? '卧推' : '',
   equipment: index === 0 ? '杠铃' : '',
   bodyPart: '胸',
-  sets: [createDefaultSet(1), createDefaultSet(2), createDefaultSet(3)],
+  sets: [createDefaultSet(1)],
+});
+
+const createDefaultExerciseDraft = (): ExerciseDraftConfig => ({
+  workingWeightKg: undefined,
+  topWeightKg: undefined,
+  setCount: 3,
+  durationMinutes: undefined,
 });
 
 const createEmptyTrainingForm = (): TrainingSessionPayload => ({
@@ -82,6 +155,62 @@ const actionStyle = {
   boxShadow: '0 12px 26px rgba(21, 122, 255, 0.22)',
 };
 
+const sectionEyebrowStyle = {
+  display: 'block',
+  fontSize: '15px',
+  lineHeight: '1',
+  letterSpacing: '0.2em',
+  color: '#91A0B5',
+  textTransform: 'uppercase',
+};
+
+const sectionHeadingStyle = {
+  display: 'block',
+  marginTop: '6px',
+  fontSize: '26px',
+  lineHeight: '1.06',
+  fontWeight: '700',
+  color: '#1C2738',
+  letterSpacing: '-0.04em',
+};
+
+const sectionMetaWrapStyle = {
+  paddingBottom: '3px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+};
+
+const sectionMetaLineStyle = {
+  width: '22px',
+  height: '1px',
+  background: 'rgba(145, 160, 181, 0.34)',
+};
+
+const sectionMetaTextStyle = {
+  fontSize: '13px',
+  color: '#91A0B5',
+  letterSpacing: '0.1em',
+};
+
+const historySectionStyle = {
+  ...cardStyle,
+  padding: '22px 24px',
+};
+
+const historyItemStyle = {
+  marginTop: '14px',
+  padding: '16px 18px',
+  borderRadius: '22px',
+  background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(246,250,255,0.94) 100%)',
+  border: '1px solid rgba(213, 221, 232, 0.76)',
+  boxShadow: '0 8px 18px rgba(125, 142, 168, 0.06), inset 0 1px 0 rgba(255,255,255,0.92)',
+};
+
+const formContentStyle = {
+  overflow: 'hidden',
+};
+
 const sectionTitleStyle = {
   fontSize: '30px',
   fontWeight: '700',
@@ -100,14 +229,45 @@ function parseNumber(value: string) {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
+function createWeightOptions(equipment?: string) {
+  const config = equipment ? equipmentWeightRanges[equipment] : undefined;
+  const max = config?.max ?? 200;
+  const step = config?.step ?? 2.5;
+  return Array.from({ length: Math.floor(max / step) + 1 }, (_, index) => `${Number((index * step).toFixed(1))}`);
+}
+
+function scrollSelectorIntoView(selector: string, topMargin = 44) {
+  const query = Taro.createSelectorQuery();
+
+  query.selectViewport().scrollOffset();
+  query.select(selector).boundingClientRect();
+  query.exec((res) => {
+    const viewport = res?.[0] as { scrollTop?: number } | undefined;
+    const target = res?.[1] as { top?: number } | undefined;
+
+    if (target?.top === undefined) {
+      return;
+    }
+
+    const scrollTop = viewport?.scrollTop || 0;
+    void Taro.pageScrollTo({
+      scrollTop: Math.max(0, scrollTop + target.top - topMargin),
+      duration: 280,
+    });
+  });
+}
+
 export default function RecordsPage() {
   const [mode, setMode] = useState<Mode>('body');
   const [submitting, setSubmitting] = useState(false);
   const [entered, setEntered] = useState(false);
+  const [bodyExpanded, setBodyExpanded] = useState(false);
+  const [trainingExpanded, setTrainingExpanded] = useState(false);
   const [bodyRecords, setBodyRecords] = useState<BodyRecordPayload[]>([]);
   const [trainingRecords, setTrainingRecords] = useState<TrainingSessionPayload[]>([]);
   const [bodyForm, setBodyForm] = useState<BodyRecordPayload>(createEmptyBodyForm());
   const [trainingForm, setTrainingForm] = useState<TrainingSessionPayload>(createEmptyTrainingForm());
+  const [exerciseDrafts, setExerciseDrafts] = useState<ExerciseDraftConfig[]>([createDefaultExerciseDraft()]);
 
   const latestBody = useMemo(() => bodyRecords.slice(0, 3), [bodyRecords]);
   const latestTraining = useMemo(() => trainingRecords.slice(0, 3), [trainingRecords]);
@@ -144,6 +304,37 @@ export default function RecordsPage() {
     }));
   };
 
+  const chooseExercise = (exerciseIndex: number, name: string) => {
+    const selected = exerciseCatalog.find((item) => item.name === name);
+    if (!selected) {
+      return;
+    }
+
+    setTrainingForm((prev) => ({
+      ...prev,
+      bodyPart: selected.bodyPart,
+      exercises: prev.exercises.map((exercise, index) =>
+        index === exerciseIndex
+          ? { ...exercise, name: selected.name, equipment: selected.equipment, bodyPart: selected.bodyPart }
+          : exercise,
+      ),
+    }));
+  };
+
+  const getOrderedExerciseOptions = (bodyPart: string) => {
+    return exerciseCatalog
+      .sort((a, b) => {
+        const aScore = a.bodyPart === bodyPart ? 0 : 1;
+        const bScore = b.bodyPart === bodyPart ? 0 : 1;
+        return aScore - bScore;
+      })
+      .map((item) => item.name);
+  };
+
+  const updateExerciseDraft = (exerciseIndex: number, patch: Partial<ExerciseDraftConfig>) => {
+    setExerciseDrafts((prev) => prev.map((item, index) => (index === exerciseIndex ? { ...item, ...patch } : item)));
+  };
+
   const updateSetField = (
     exerciseIndex: number,
     setIndex: number,
@@ -177,6 +368,7 @@ export default function RecordsPage() {
       ...prev,
       exercises: [...prev.exercises, createDefaultExercise(prev.exercises.length)],
     }));
+    setExerciseDrafts((prev) => [...prev, createDefaultExerciseDraft()]);
   };
 
   const removeExercise = (exerciseIndex: number) => {
@@ -184,34 +376,7 @@ export default function RecordsPage() {
       ...prev,
       exercises: prev.exercises.filter((_, index) => index !== exerciseIndex),
     }));
-  };
-
-  const addSet = (exerciseIndex: number) => {
-    setTrainingForm((prev) => ({
-      ...prev,
-      exercises: prev.exercises.map((exercise, index) =>
-        index === exerciseIndex
-          ? { ...exercise, sets: [...exercise.sets, createDefaultSet(exercise.sets.length + 1)] }
-          : exercise,
-      ),
-    }));
-  };
-
-  const removeSet = (exerciseIndex: number, setIndex: number) => {
-    setTrainingForm((prev) => ({
-      ...prev,
-      exercises: prev.exercises.map((exercise, index) => {
-        if (index !== exerciseIndex) {
-          return exercise;
-        }
-
-        const sets = exercise.sets
-          .filter((_, currentIndex) => currentIndex !== setIndex)
-          .map((set, currentIndex) => ({ ...set, setIndex: currentIndex + 1 }));
-
-        return { ...exercise, sets };
-      }),
-    }));
+    setExerciseDrafts((prev) => prev.filter((_, index) => index !== exerciseIndex));
   };
 
   const validateBodyForm = () => {
@@ -240,12 +405,18 @@ export default function RecordsPage() {
       if (!exercise.name) {
         return '请填写动作名称';
       }
-      if (!exercise.sets.length) {
-        return '每个动作至少保留一组';
-      }
-      const hasValidSet = exercise.sets.some((set) => set.weightKg || set.reps);
-      if (!hasValidSet) {
-        return `动作 ${exercise.name} 至少填写一组重量或次数`;
+      const draft = exerciseDrafts[trainingForm.exercises.indexOf(exercise)];
+      if (trainingForm.bodyPart === '有氧') {
+        if (!draft?.durationMinutes) {
+          return `动作 ${exercise.name} 请填写训练时长`;
+        }
+      } else {
+        if (!draft?.setCount) {
+          return `动作 ${exercise.name} 请填写组数`;
+        }
+        if (!draft?.workingWeightKg && !draft?.topWeightKg) {
+          return `动作 ${exercise.name} 请填写做组重量或极限重量`;
+        }
       }
     }
 
@@ -262,8 +433,10 @@ export default function RecordsPage() {
     setSubmitting(true);
     try {
       await createBodyRecord(bodyForm);
-      Taro.showToast({ title: '身体记录已保存', icon: 'success' });
+      Taro.showToast({ title: '身体状态已留存', icon: 'success' });
       setBodyForm(createEmptyBodyForm());
+      setBodyExpanded(false);
+      void Taro.pageScrollTo({ selector: '#body-record-section', offsetTop: 20, duration: 280 });
       await loadData();
     } catch {
       Taro.showToast({ title: '身体记录保存失败', icon: 'none' });
@@ -281,9 +454,30 @@ export default function RecordsPage() {
 
     setSubmitting(true);
     try {
-      await createTrainingSession(trainingForm);
-      Taro.showToast({ title: '训练记录已保存', icon: 'success' });
+      const payload: TrainingSessionPayload = {
+        ...trainingForm,
+        exercises: trainingForm.exercises.map((exercise, index) => {
+          const draft = exerciseDrafts[index] || createDefaultExerciseDraft();
+          const isCardio = trainingForm.bodyPart === '有氧';
+
+          return {
+            ...exercise,
+            exerciseType: isCardio ? 'CARDIO' : 'STRENGTH',
+            workingWeightKg: isCardio ? undefined : draft.workingWeightKg,
+            topWeightKg: isCardio ? undefined : draft.topWeightKg,
+            setCount: isCardio ? undefined : draft.setCount,
+            durationMinutes: isCardio ? draft.durationMinutes : undefined,
+            sets: [],
+          };
+        }),
+      };
+
+      await createTrainingSession(payload);
+      Taro.showToast({ title: '训练记录已留存', icon: 'success' });
       setTrainingForm(createEmptyTrainingForm());
+      setExerciseDrafts([createDefaultExerciseDraft()]);
+      setTrainingExpanded(false);
+      void Taro.pageScrollTo({ selector: '#training-record-section', offsetTop: 20, duration: 280 });
       await loadData();
     } catch {
       Taro.showToast({ title: '训练记录保存失败', icon: 'none' });
@@ -292,13 +486,42 @@ export default function RecordsPage() {
     }
   };
 
+  const toggleBodyExpanded = () => {
+    const next = !bodyExpanded;
+    setBodyExpanded(next);
+
+    setTimeout(() => {
+      scrollSelectorIntoView(next ? '#body-record-collapse-anchor' : '#body-record-section');
+    }, 40);
+  };
+
+  const toggleTrainingExpanded = () => {
+    const next = !trainingExpanded;
+    setTrainingExpanded(next);
+
+    setTimeout(() => {
+      scrollSelectorIntoView(next ? '#training-record-collapse-anchor' : '#training-record-section');
+    }, 40);
+  };
+
   return (
     <ScrollView scrollY style={pageStyle}>
       <View style={pageContentStyle}>
-      <View style={{ ...cardStyle, background: 'linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(235,243,255,0.88) 58%, rgba(219,232,250,0.95) 100%)', transform: entered ? 'translateY(0)' : 'translateY(18px)', opacity: entered ? '1' : '0.01', transition: 'all 360ms ease' }}>
-        <Text style={{ display: 'block', fontSize: '38px', fontWeight: '700', color: '#101828', letterSpacing: '-0.04em' }}>记录中心</Text>
-        <Text style={{ display: 'block', marginTop: '10px', color: '#607086', lineHeight: '1.8' }}>
-          现在已经支持日期选择、基础校验、多动作多组训练录入，以及提交后自动重置表单，适合直接开始联调。
+      <View style={{ ...cardStyle, background: 'linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(243,248,255,0.96) 42%, rgba(226,236,249,0.96) 100%)', position: 'relative', overflow: 'hidden', padding: '18px 18px 16px', transform: entered ? 'translateY(0)' : 'translateY(18px)', opacity: entered ? '1' : '0.01', transition: 'all 360ms ease' }}>
+        <View style={{ position: 'absolute', top: '-70px', right: '-10px', width: '188px', height: '188px', borderRadius: '94px', background: 'radial-gradient(circle, rgba(21,122,255,0.18) 0%, rgba(21,122,255,0.06) 38%, rgba(21,122,255,0) 72%)' }} />
+        <View style={{ position: 'absolute', left: '-42px', bottom: '-60px', width: '150px', height: '150px', borderRadius: '75px', background: 'radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 52%, rgba(255,255,255,0) 74%)' }} />
+        <View style={{ position: 'relative', zIndex: 1 }}>
+        <View style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View>
+            <Text style={{ display: 'block', fontSize: '14px', letterSpacing: '0.24em', color: '#7A97BE' }}>RECORD STUDIO</Text>
+            <Text style={{ display: 'block', marginTop: '6px', fontSize: '40px', fontWeight: '700', color: '#101828', letterSpacing: '-0.04em', lineHeight: '1.02' }}>记录中心</Text>
+          </View>
+          <View style={{ padding: '7px 11px', borderRadius: '999px', background: 'rgba(255,255,255,0.66)', border: '1px solid rgba(255,255,255,0.84)' }}>
+            <Text style={{ color: '#4C78AE', fontSize: '15px', fontWeight: '600', letterSpacing: '0.1em' }}>{mode === 'body' ? 'BODY' : 'TRAINING'}</Text>
+          </View>
+        </View>
+        <Text style={{ display: 'block', marginTop: '8px', color: '#5B6B83', lineHeight: '1.6', fontSize: '18px', maxWidth: '560px' }}>
+          把身体变化与训练细节留在同一个空间里，让每一次投入都有迹可循。
         </Text>
         <View style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
           <Button
@@ -314,27 +537,47 @@ export default function RecordsPage() {
             训练记录
           </Button>
         </View>
+        </View>
       </View>
 
       {mode === 'body' ? (
-        <View style={{ ...cardStyle, transform: entered ? 'translateY(0)' : 'translateY(26px)', opacity: entered ? '1' : '0.01', transition: 'all 440ms ease' }}>
-          <Text style={sectionTitleStyle}>身体指标录入</Text>
-          <Text style={{ display: 'block', marginTop: '10px', color: '#7A8598' }}>至少填写 1 项核心指标，适合训练前后快速记录。</Text>
+        <View id='body-record-section' style={{ ...cardStyle, ...formContentStyle, transform: entered ? 'translateY(0)' : 'translateY(26px)', opacity: entered ? '1' : '0.01', transition: 'all 440ms ease' }}>
+          <View style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+            <View>
+              <Text style={sectionEyebrowStyle}>BODY METRICS</Text>
+              <Text style={sectionHeadingStyle}>身体指标录入</Text>
+            </View>
+            <View style={sectionMetaWrapStyle}>
+              <View style={sectionMetaLineStyle} />
+              <Text style={sectionMetaTextStyle}>INPUT</Text>
+            </View>
+          </View>
+          <Text style={{ display: 'block', marginTop: '10px', color: '#7A8598' }}>留下今天的身体状态，让变化开始拥有参照。</Text>
           <View style={{ marginTop: '16px', padding: '18px', borderRadius: '24px', background: 'linear-gradient(135deg, rgba(21,122,255,0.08) 0%, rgba(114,185,255,0.12) 100%)', border: '1px solid rgba(175, 210, 248, 0.6)' }}>
             <Text style={{ color: '#5074A1', fontSize: '22px' }}>身体状态概览</Text>
             <View style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
               <View style={{ flex: 1, padding: '14px', borderRadius: '20px', background: 'rgba(255,255,255,0.8)' }}>
                 <Text style={{ color: '#7B8DA9', fontSize: '20px' }}>当前体重</Text>
-                <Text style={{ display: 'block', marginTop: '6px', fontSize: '32px', fontWeight: '700', color: '#157AFF' }}>{bodyForm.weightKg ?? '--'}</Text>
+                <Text style={{ display: 'block', marginTop: '6px', fontSize: '32px', fontWeight: '700', color: '#157AFF' }}>{latestBody[0]?.weightKg ?? '--'}</Text>
               </View>
               <View style={{ flex: 1, padding: '14px', borderRadius: '20px', background: 'rgba(255,255,255,0.8)' }}>
                 <Text style={{ color: '#7B8DA9', fontSize: '20px' }}>当前体脂</Text>
-                <Text style={{ display: 'block', marginTop: '6px', fontSize: '32px', fontWeight: '700', color: '#20A46A' }}>{bodyForm.bodyFatRate ?? '--'}</Text>
+                <Text style={{ display: 'block', marginTop: '6px', fontSize: '32px', fontWeight: '700', color: '#20A46A' }}>{latestBody[0]?.bodyFatRate ?? '--'}</Text>
               </View>
             </View>
           </View>
+          {!bodyExpanded && (
+            <Button style={{ ...actionStyle, marginTop: '16px' }} onClick={toggleBodyExpanded}>
+              填写身体记录
+            </Button>
+          )}
+          {bodyExpanded && (
+            <>
+          <Button id='body-record-collapse-anchor' style={{ ...mutedActionStyle, marginTop: '16px' }} onClick={toggleBodyExpanded}>
+            收起填写
+          </Button>
           <Picker mode='date' value={bodyForm.recordDate} onChange={(e) => setBodyForm({ ...bodyForm, recordDate: e.detail.value })}>
-            <View style={inputStyle}>
+            <View id='body-record-first-field' style={inputStyle}>
               <Text>{bodyForm.recordDate || '选择记录日期'}</Text>
             </View>
           </Picker>
@@ -367,32 +610,53 @@ export default function RecordsPage() {
             placeholder='胸围 cm（选填）'
           />
           <Textarea
-            style={{ ...inputStyle, minHeight: '140px' }}
+            style={{ ...inputStyle, minHeight: '140px', display: 'block', width: 'auto', boxSizing: 'border-box' }}
             value={bodyForm.note || ''}
             onInput={(e) => setBodyForm({ ...bodyForm, note: e.detail.value })}
             placeholder='备注，例如空腹、训练后、体测环境'
           />
           <View style={{ display: 'flex', gap: '12px' }}>
             <Button style={mutedActionStyle} onClick={() => setBodyForm(createEmptyBodyForm())}>
-              清空表单
+              清空本次
             </Button>
             <Button style={actionStyle} loading={submitting} onClick={() => void submitBody()}>
-              保存身体记录
+              留存记录
             </Button>
           </View>
+            </>
+          )}
         </View>
       ) : (
-        <View style={{ ...cardStyle, transform: entered ? 'translateY(0)' : 'translateY(26px)', opacity: entered ? '1' : '0.01', transition: 'all 440ms ease' }}>
-          <Text style={sectionTitleStyle}>训练录入</Text>
-          <Text style={{ display: 'block', marginTop: '10px', color: '#7A8598' }}>支持多动作多组，适合一次训练完整复盘。</Text>
+        <View id='training-record-section' style={{ ...cardStyle, ...formContentStyle, transform: entered ? 'translateY(0)' : 'translateY(26px)', opacity: entered ? '1' : '0.01', transition: 'all 440ms ease' }}>
+          <View style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+            <View>
+              <Text style={sectionEyebrowStyle}>TRAINING LOG</Text>
+              <Text style={sectionHeadingStyle}>训练录入</Text>
+            </View>
+            <View style={sectionMetaWrapStyle}>
+              <View style={sectionMetaLineStyle} />
+              <Text style={sectionMetaTextStyle}>SESSION</Text>
+            </View>
+          </View>
+          <Text style={{ display: 'block', marginTop: '10px', color: '#7A8598' }}>把一次训练的重点、动作与负荷完整留住。</Text>
           <View style={{ marginTop: '16px', padding: '18px', borderRadius: '24px', background: 'linear-gradient(135deg, rgba(32,164,106,0.08) 0%, rgba(119,215,167,0.12) 100%)', border: '1px solid rgba(180, 233, 206, 0.6)' }}>
             <Text style={{ color: '#4E8F71', fontSize: '22px' }}>训练负荷预览</Text>
             <Text style={{ display: 'block', marginTop: '8px', color: tokens.textSecondary, lineHeight: '1.7' }}>
               当前共录入 {trainingForm.exercises.length} 个动作，适合在一次训练结束后快速回放与补充细节。
             </Text>
           </View>
+          {!trainingExpanded && (
+            <Button style={{ ...actionStyle, marginTop: '16px', background: 'linear-gradient(135deg, #20A46A 0%, #67D597 100%)', boxShadow: '0 12px 26px rgba(32, 164, 106, 0.22)' }} onClick={toggleTrainingExpanded}>
+              填写训练记录
+            </Button>
+          )}
+          {trainingExpanded && (
+            <>
+          <Button id='training-record-collapse-anchor' style={{ ...mutedActionStyle, marginTop: '16px' }} onClick={toggleTrainingExpanded}>
+            收起填写
+          </Button>
           <Picker mode='date' value={trainingForm.sessionDate} onChange={(e) => setTrainingForm({ ...trainingForm, sessionDate: e.detail.value })}>
-            <View style={inputStyle}>
+            <View id='training-record-first-field' style={inputStyle}>
               <Text>{trainingForm.sessionDate || '选择训练日期'}</Text>
             </View>
           </Picker>
@@ -405,75 +669,86 @@ export default function RecordsPage() {
               <Text>{trainingForm.bodyPart || '选择训练部位'}</Text>
             </View>
           </Picker>
-          <Textarea
-            style={{ ...inputStyle, minHeight: '120px' }}
-            value={trainingForm.note || ''}
-            onInput={(e) => setTrainingForm({ ...trainingForm, note: e.detail.value })}
-            placeholder='补充训练感受、当天状态、动作重点'
-          />
-
           {trainingForm.exercises.map((exercise, exerciseIndex) => (
-            <View key={`exercise-${exerciseIndex}`} style={{ ...cardStyle, marginTop: '20px', marginBottom: '0', background: 'linear-gradient(135deg, #FFFFFF 0%, #F4F8FF 100%)', border: '1px solid rgba(209, 221, 241, 0.78)' }}>
+            <View key={`exercise-${exerciseIndex}`} style={{ ...cardStyle, ...formContentStyle, marginTop: '20px', marginBottom: '0', background: 'linear-gradient(135deg, #FFFFFF 0%, #F4F8FF 100%)', border: '1px solid rgba(209, 221, 241, 0.78)' }}>
               <Text style={{ fontSize: '26px', fontWeight: '700', color: '#162033' }}>动作 {exerciseIndex + 1}</Text>
-              <Input
-                style={inputStyle}
-                type='text'
-                value={exercise.name}
-                onInput={(e) => updateExerciseField(exerciseIndex, 'name', e.detail.value)}
-                placeholder='动作名称，例如 卧推 / 深蹲'
-              />
-              <Input
-                style={inputStyle}
-                type='text'
-                value={exercise.equipment || ''}
-                onInput={(e) => updateExerciseField(exerciseIndex, 'equipment', e.detail.value)}
-                placeholder='器械，例如 杠铃 / 哑铃 / 器械'
-              />
+              {(() => {
+                const orderedExerciseOptions = getOrderedExerciseOptions(trainingForm.bodyPart);
 
-              {exercise.sets.map((set, setIndex) => (
-                <View key={`exercise-${exerciseIndex}-set-${setIndex}`} style={{ marginTop: '16px', padding: '16px', borderRadius: '22px', background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(218, 226, 239, 0.76)' }}>
-                  <Text style={{ color: '#5A6980', fontWeight: '700' }}>第 {set.setIndex} 组</Text>
-                  <Input
-                    style={inputStyle}
-                    type='digit'
-                    value={set.weightKg?.toString() || ''}
-                    onInput={(e) => updateSetField(exerciseIndex, setIndex, 'weightKg', e.detail.value)}
-                    placeholder='重量 kg'
-                  />
-                  <Input
-                    style={inputStyle}
-                    type='number'
-                    value={set.reps?.toString() || ''}
-                    onInput={(e) => updateSetField(exerciseIndex, setIndex, 'reps', e.detail.value)}
-                    placeholder='次数 reps'
-                  />
-                  <Input
-                    style={inputStyle}
-                    type='digit'
-                    value={set.rpe?.toString() || ''}
-                    onInput={(e) => updateSetField(exerciseIndex, setIndex, 'rpe', e.detail.value)}
-                    placeholder='RPE（选填）'
-                  />
-                  <Button
-                    style={{ ...mutedActionStyle, marginTop: '12px', opacity: exercise.sets.length <= 1 ? '0.45' : '1' }}
-                    disabled={exercise.sets.length <= 1}
-                    onClick={() => removeSet(exerciseIndex, setIndex)}
-                  >
-                    删除这一组
-                  </Button>
+                return (
+              <Picker
+                mode='selector'
+                range={orderedExerciseOptions}
+                onChange={(e) => {
+                  chooseExercise(exerciseIndex, orderedExerciseOptions[Number(e.detail.value)]);
+                }}
+              >
+                <View style={inputStyle}>
+                  <Text style={{ color: exercise.name ? '#162033' : '#8A94A6' }}>{exercise.name || '选择动作名称'}</Text>
                 </View>
-              ))}
+              </Picker>
+                );
+              })()}
+              <Text style={{ display: 'block', marginTop: '10px', color: '#6D7686' }}>
+                {exercise.equipment ? `当前器械 · ${exercise.equipment}` : '选择动作后会自动带出器械'}
+              </Text>
+              {trainingForm.bodyPart === '有氧' ? (
+                <View style={{ ...formContentStyle, marginTop: '16px', padding: '16px', borderRadius: '22px', background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(218, 226, 239, 0.76)' }}>
+                  <Text style={{ color: '#5A6980', fontWeight: '700' }}>训练时长</Text>
+                  <Picker mode='selector' range={durationMinuteOptions} onChange={(e) => updateExerciseDraft(exerciseIndex, { durationMinutes: Number(durationMinuteOptions[Number(e.detail.value)]) })}>
+                    <View style={inputStyle}>
+                      <Text style={{ color: exerciseDrafts[exerciseIndex]?.durationMinutes ? '#162033' : '#8A94A6' }}>{exerciseDrafts[exerciseIndex]?.durationMinutes ? `${exerciseDrafts[exerciseIndex]?.durationMinutes} 分钟` : '选择分钟数'}</Text>
+                    </View>
+                  </Picker>
+                </View>
+              ) : (
+                <View style={{ ...formContentStyle, marginTop: '16px', padding: '16px', borderRadius: '22px', background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(218, 226, 239, 0.76)' }}>
+                  <Text style={{ color: '#5A6980', fontWeight: '700' }}>训练配置</Text>
+                  {(() => {
+                    const weightOptions = createWeightOptions(exercise.equipment);
+                    const defaultWorking = exercise.equipment === '哑铃' ? 20 : exercise.equipment === '杠铃' ? 60 : 40;
+                    const defaultTop = exercise.equipment === '哑铃' ? 24 : exercise.equipment === '杠铃' ? 80 : 50;
+
+                    return (
+                      <>
+                  <Picker
+                    mode='selector'
+                    range={weightOptions}
+                    value={Math.max(0, weightOptions.indexOf(String(exerciseDrafts[exerciseIndex]?.workingWeightKg ?? defaultWorking)))}
+                    onChange={(e) => updateExerciseDraft(exerciseIndex, { workingWeightKg: Number(weightOptions[Number(e.detail.value)]) })}
+                  >
+                    <View style={inputStyle}>
+                      <Text style={{ color: exerciseDrafts[exerciseIndex]?.workingWeightKg !== undefined ? '#162033' : '#8A94A6' }}>{exerciseDrafts[exerciseIndex]?.workingWeightKg !== undefined ? `${exerciseDrafts[exerciseIndex]?.workingWeightKg} kg` : '选择做组重量'}</Text>
+                    </View>
+                  </Picker>
+                  <Picker
+                    mode='selector'
+                    range={weightOptions}
+                    value={Math.max(0, weightOptions.indexOf(String(exerciseDrafts[exerciseIndex]?.topWeightKg ?? exerciseDrafts[exerciseIndex]?.workingWeightKg ?? defaultTop)))}
+                    onChange={(e) => updateExerciseDraft(exerciseIndex, { topWeightKg: Number(weightOptions[Number(e.detail.value)]) })}
+                  >
+                    <View style={inputStyle}>
+                      <Text style={{ color: exerciseDrafts[exerciseIndex]?.topWeightKg !== undefined ? '#162033' : '#8A94A6' }}>{exerciseDrafts[exerciseIndex]?.topWeightKg !== undefined ? `${exerciseDrafts[exerciseIndex]?.topWeightKg} kg` : '选择极限重量'}</Text>
+                    </View>
+                  </Picker>
+                      </>
+                    );
+                  })()}
+                  <Picker mode='selector' range={setCountOptions} onChange={(e) => updateExerciseDraft(exerciseIndex, { setCount: Number(setCountOptions[Number(e.detail.value)]) })}>
+                    <View style={inputStyle}>
+                      <Text style={{ color: exerciseDrafts[exerciseIndex]?.setCount ? '#162033' : '#8A94A6' }}>{exerciseDrafts[exerciseIndex]?.setCount ? `${exerciseDrafts[exerciseIndex]?.setCount} 组` : '选择组数'}</Text>
+                    </View>
+                  </Picker>
+                </View>
+              )}
 
               <View style={{ display: 'flex', gap: '12px' }}>
-                <Button style={mutedActionStyle} onClick={() => addSet(exerciseIndex)}>
-                  新增一组
-                </Button>
                 <Button
                   style={{ ...mutedActionStyle, opacity: trainingForm.exercises.length <= 1 ? '0.45' : '1' }}
                   disabled={trainingForm.exercises.length <= 1}
                   onClick={() => removeExercise(exerciseIndex)}
                 >
-                  删除动作
+                  移除动作
                 </Button>
               </View>
             </View>
@@ -481,24 +756,35 @@ export default function RecordsPage() {
 
           <View style={{ display: 'flex', gap: '12px' }}>
             <Button style={mutedActionStyle} onClick={() => addExercise()}>
-              新增动作
+              添加动作
             </Button>
             <Button style={mutedActionStyle} onClick={() => setTrainingForm(createEmptyTrainingForm())}>
-              重置训练表单
+              重新开始
             </Button>
           </View>
 
           <Button style={actionStyle} loading={submitting} onClick={() => void submitTraining()}>
-            保存训练记录
+            留存训练
           </Button>
+            </>
+          )}
         </View>
       )}
 
-      <View style={{ ...cardStyle, transform: entered ? 'translateY(0)' : 'translateY(34px)', opacity: entered ? '1' : '0.01', transition: 'all 520ms ease' }}>
-        <Text style={{ ...sectionTitleStyle, fontSize: '28px' }}>最近身体记录</Text>
+      <View style={{ ...historySectionStyle, transform: entered ? 'translateY(0)' : 'translateY(34px)', opacity: entered ? '1' : '0.01', transition: 'all 520ms ease' }}>
+        <View style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+          <View>
+            <Text style={sectionEyebrowStyle}>RECENT BODY</Text>
+            <Text style={{ ...sectionHeadingStyle, fontSize: '28px' }}>最近身体记录</Text>
+          </View>
+          <View style={sectionMetaWrapStyle}>
+            <View style={sectionMetaLineStyle} />
+            <Text style={sectionMetaTextStyle}>HISTORY</Text>
+          </View>
+        </View>
         {latestBody.length ? (
           latestBody.map((item, index) => (
-            <View key={`${item.recordDate}-${index}`} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(218, 226, 239, 0.82)' }}>
+            <View key={`${item.recordDate}-${index}`} style={historyItemStyle}>
               <Text style={{ display: 'block', color: '#162033' }}>{item.recordDate}</Text>
               <Text style={{ display: 'block', color: '#6C788A', marginTop: '6px' }}>
                 体重 {item.weightKg || '-'} kg · 体脂 {item.bodyFatRate || '-'}% · 腰围 {item.waistCm || '-'} cm
@@ -506,15 +792,24 @@ export default function RecordsPage() {
             </View>
           ))
         ) : (
-          <Text style={{ display: 'block', marginTop: '12px', color: '#8A94A6' }}>还没有身体记录。</Text>
+          <Text style={{ display: 'block', marginTop: '12px', color: '#8A94A6' }}>你的第一条身体记录，会让之后的变化更值得回看。</Text>
         )}
       </View>
 
-      <View style={{ ...cardStyle, transform: entered ? 'translateY(0)' : 'translateY(42px)', opacity: entered ? '1' : '0.01', transition: 'all 600ms ease' }}>
-        <Text style={{ ...sectionTitleStyle, fontSize: '28px' }}>最近训练记录</Text>
+      <View style={{ ...historySectionStyle, transform: entered ? 'translateY(0)' : 'translateY(42px)', opacity: entered ? '1' : '0.01', transition: 'all 600ms ease' }}>
+        <View style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+          <View>
+            <Text style={sectionEyebrowStyle}>RECENT SESSION</Text>
+            <Text style={{ ...sectionHeadingStyle, fontSize: '28px' }}>最近训练记录</Text>
+          </View>
+          <View style={sectionMetaWrapStyle}>
+            <View style={sectionMetaLineStyle} />
+            <Text style={sectionMetaTextStyle}>HISTORY</Text>
+          </View>
+        </View>
         {latestTraining.length ? (
           latestTraining.map((item, index) => (
-            <View key={`${item.sessionDate}-${index}`} style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(218, 226, 239, 0.82)' }}>
+            <View key={`${item.sessionDate}-${index}`} style={historyItemStyle}>
               <Text style={{ display: 'block', color: '#162033' }}>{item.sessionDate}</Text>
               <Text style={{ display: 'block', color: '#6C788A', marginTop: '6px' }}>
                 {item.bodyPart} · {item.exercises?.[0]?.name || '未填写动作'} · {item.exercises?.[0]?.sets?.[0]?.weightKg || '-'} kg x {item.exercises?.[0]?.sets?.[0]?.reps || '-'}
@@ -522,7 +817,7 @@ export default function RecordsPage() {
             </View>
           ))
         ) : (
-          <Text style={{ display: 'block', marginTop: '12px', color: '#8A94A6' }}>还没有训练记录。</Text>
+          <Text style={{ display: 'block', marginTop: '12px', color: '#8A94A6' }}>从第一次训练开始，力量与节奏都会慢慢有迹可循。</Text>
         )}
       </View>
       </View>

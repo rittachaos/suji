@@ -8,7 +8,7 @@ export async function loginWithWechat() {
   try {
     const systemInfo = Taro.getSystemInfoSync();
     if (systemInfo.platform === 'devtools') {
-      code = `devtools-${Date.now()}`;
+      code = 'devtools-chaos';
     }
   } catch {
     // Ignore environment detection failures and fall back to normal login.
@@ -20,7 +20,7 @@ export async function loginWithWechat() {
       code = loginRes.code ?? '';
     } catch {
       // DevTools can occasionally timeout on wx.login; keep the request on the real backend.
-      code = `devtools-${Date.now()}`;
+      code = 'devtools-chaos';
     }
   }
 
