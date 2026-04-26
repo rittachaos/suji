@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  COACH
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum GoalType {
+  FAT_LOSS
+  MUSCLE_GAIN
+  SHAPING
+  STRENGTH
+  MAINTAIN
+}
+
+enum TrainingPhase {
+  BEGINNER
+  BUILDING
+  CUTTING
+  RECOMP
+  MAINTAINING
+}
+
+enum BodyPhotoType {
+  FRONT
+  SIDE
+  BACK
+  OTHER
+}
+
+enum FileType {
+  IMAGE
+  PDF
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                 String                 @id @default(cuid())
+  openId             String                 @unique
+  unionId            String?                @unique
+  phone              String?                @unique
+  nickname           String?
+  avatarUrl          String?
+  role               UserRole               @default(USER)
+  isActive           Boolean                @default(true)
+  profile            UserProfile?
+  goal               UserGoal?
+  bodyRecords        BodyRecord[]
+  bodyReports        BodyReport[]
+  progressPhotos     ProgressPhoto[]
+  trainingSessions   TrainingSession[]
+  coachApplications  CoachApplication[]     @relation("UserCoachApplications")
+  managedApplications CoachApplication[]    @relation("ReviewerCoachApplications")
+  coachRelations     CoachStudentRelation[] @relation("CoachRelations")
+  studentRelations   CoachStudentRelation[] @relation("StudentRelations")
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+}
+
+model UserProfile {
+  id            String        @id @default(cuid())
+  userId        String        @unique
+  gender        Gender?
+  age           Int?
+  heightCm      Float?
+  trainingPhase TrainingPhase?
+  note          String?
+  user          User          @relation(fields: [userId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model UserGoal {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  goalType         GoalType
+  targetWeightKg   Float?
+  targetBodyFat    Float?
+  targetWaistCm    Float?
+  targetStrength   Json?
+  targetCycleDays  Int?
+  startDate        DateTime?
+  endDate          DateTime?
+  user             User      @relation(fields: [userId], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model BodyRecord {
+  id              String     @id @default(cuid())
+  userId          String
+  recordDate      DateTime
+  heightCm        Float?
+  weightKg        Float?
+  bodyFatRate     Float?
+  skeletalMuscle  Float?
+  bmi             Float?
+  chestCm         Float?
+  waistCm         Float?
+  hipCm           Float?
+  armCm           Float?
+  thighCm         Float?
+  calfCm          Float?
+  shoulderCm      Float?
+  extraMetrics    Json?
+  note            String?
+  user            User       @relation(fields: [userId], references: [id])
+  reports         BodyReport[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([userId, recordDate])
+}
+
+model BodyReport {
+  id            String      @id @default(cuid())
+  userId        String
+  bodyRecordId  String?
+  fileType      FileType
+  fileUrl       String
+  reportDate    DateTime
+  note          String?
+  user          User        @relation(fields: [userId], references: [id])
+  bodyRecord    BodyRecord? @relation(fields: [bodyRecordId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId, reportDate])
+}
+
+model ProgressPhoto {
+  id           String        @id @default(cuid())
+  userId       String
+  photoType    BodyPhotoType
+  fileUrl      String
+  shotDate     DateTime
+  note         String?
+  user         User          @relation(fields: [userId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId, shotDate])
+}
+
+model TrainingSession {
+  id             String              @id @default(cuid())
+  userId         String
+  sessionDate    DateTime
+  bodyPart       String
+  note           String?
+  totalVolume    Float?              @default(0)
+  estimatedOneRm Float?              @default(0)
+  user           User                @relation(fields: [userId], references: [id])
+  exercises      TrainingExercise[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([userId, sessionDate])
+}
+
+model TrainingExercise {
+  id               String         @id @default(cuid())
+  sessionId        String
+  name             String
+  equipment        String?
+  bodyPart         String?
+  bestWeightKg     Float?         @default(0)
+  totalVolume      Float?         @default(0)
+  estimatedOneRm   Float?         @default(0)
+  session          TrainingSession @relation(fields: [sessionId], references: [id])
+  sets             ExerciseSet[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model ExerciseSet {
+  id               String           @id @default(cuid())
+  exerciseId       String
+  setIndex         Int
+  weightKg         Float?
+  reps             Int?
+  durationSeconds  Int?
+  distanceMeters   Float?
+  rpe              Float?
+  note             String?
+  exercise         TrainingExercise @relation(fields: [exerciseId], references: [id])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model CoachApplication {
+  id            String            @id @default(cuid())
+  userId        String
+  reason        String
+  status        ApplicationStatus @default(PENDING)
+  reviewNote    String?
+  reviewedById  String?
+  reviewedAt    DateTime?
+  user          User              @relation("UserCoachApplications", fields: [userId], references: [id])
+  reviewedBy    User?             @relation("ReviewerCoachApplications", fields: [reviewedById], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([userId, status])
+}
+
+model CoachStudentRelation {
+  id          String   @id @default(cuid())
+  coachId     String
+  studentId   String
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  note        String?
+  coach       User     @relation("CoachRelations", fields: [coachId], references: [id])
+  student     User     @relation("StudentRelations", fields: [studentId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([coachId, studentId])
+}

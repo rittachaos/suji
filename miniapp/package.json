@@ -1,0 +1,35 @@
+{
+  "name": "suji-miniapp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:weapp": "taro build --type weapp --watch",
+    "build:weapp": "taro build --type weapp"
+  },
+  "dependencies": {
+    "@tarojs/api": "^4.0.5",
+    "@tarojs/components": "^4.0.5",
+    "@tarojs/helper": "^4.0.5",
+    "@tarojs/react": "^4.0.5",
+    "@tarojs/runner-utils": "^4.0.5",
+    "@tarojs/runtime": "^4.0.5",
+    "@tarojs/service": "^4.0.5",
+    "@tarojs/shared": "^4.0.5",
+    "@tarojs/taro": "^4.0.5",
+    "@tarojs/webpack5-runner": "^4.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.28.5",
+    "@tarojs/cli": "^4.0.5",
+    "@tarojs/plugin-framework-react": "^4.0.5",
+    "@tarojs/plugin-platform-weapp": "^4.0.5",
+    "@types/node": "^22.5.4",
+    "@types/react": "^18.3.5",
+    "babel-preset-taro": "^4.2.0",
+    "esbuild": "^0.21.5",
+    "typescript": "^5.5.4"
+  }
+}

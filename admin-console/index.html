@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>塑迹管理台</title>
+    <style>
+      :root {
+        --bg: #f3eadc;
+        --panel: rgba(255, 248, 241, 0.94);
+        --panel-strong: #fff4ea;
+        --text: #2c241f;
+        --muted: #6f655c;
+        --line: #e6d7c7;
+        --accent: #c4552d;
+        --accent-dark: #91391b;
+        --green: #2f7d6c;
+        --shadow: 0 24px 50px rgba(82, 52, 28, 0.12);
+        --radius: 28px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Hiragino Sans GB", "PingFang SC", "Noto Sans SC", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(196, 85, 45, 0.12), transparent 24%),
+          linear-gradient(180deg, #f5eddf 0%, #efe2d2 100%);
+        min-height: 100vh;
+      }
+
+      .shell {
+        width: min(1280px, calc(100vw - 48px));
+        margin: 24px auto 56px;
+      }
+
+      .hero,
+      .panel {
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .hero {
+        border-radius: 36px;
+        padding: 28px;
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(30px, 4vw, 54px);
+        line-height: 1.05;
+      }
+
+      .hero p {
+        color: var(--muted);
+        line-height: 1.8;
+        margin: 10px 0 0;
+      }
+
+      .summary-grid,
+      .content-grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+        margin-bottom: 20px;
+      }
+
+      .content-grid {
+        grid-template-columns: 1.05fr 1.05fr 0.9fr;
+        align-items: start;
+      }
+
+      .panel {
+        border-radius: var(--radius);
+        padding: 22px;
+      }
+
+      .panel h2,
+      .panel h3 {
+        margin: 0;
+      }
+
+      .panel .sub {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 8px;
+      }
+
+      .metric {
+        background: linear-gradient(135deg, rgba(255, 244, 234, 0.96), rgba(255, 255, 255, 0.82));
+        border-radius: 24px;
+        padding: 20px;
+        border: 1px solid rgba(230, 215, 199, 0.8);
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 34px;
+        margin-top: 10px;
+      }
+
+      .toolbar,
+      .token-box,
+      .form-stack,
+      .row,
+      .action-row {
+        display: flex;
+        gap: 10px;
+      }
+
+      .toolbar,
+      .token-box,
+      .form-stack {
+        flex-wrap: wrap;
+      }
+
+      .toolbar,
+      .token-box {
+        margin-top: 16px;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--text);
+      }
+
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 18px;
+        cursor: pointer;
+        transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .secondary {
+        background: #ead7c6;
+        color: #5f4b3b;
+      }
+
+      .approve {
+        background: var(--green);
+        color: #fff;
+      }
+
+      .danger {
+        background: #ad4b31;
+        color: #fff;
+      }
+
+      .list {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .item {
+        background: var(--panel-strong);
+        border: 1px solid rgba(230, 215, 199, 0.9);
+        border-radius: 20px;
+        padding: 16px;
+      }
+
+      .item strong,
+      .item span {
+        display: block;
+      }
+
+      .item strong {
+        font-size: 16px;
+      }
+
+      .item span {
+        margin-top: 6px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 6px 12px;
+        background: rgba(196, 85, 45, 0.1);
+        color: var(--accent-dark);
+        font-size: 13px;
+        margin-top: 10px;
+      }
+
+      .status {
+        font-weight: 700;
+      }
+
+      .empty,
+      .hint {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .footer-note {
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .auth-banner {
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(47, 125, 108, 0.12);
+        color: #2b5f53;
+        font-size: 14px;
+      }
+
+      @media (max-width: 1080px) {
+        .hero,
+        .content-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <div>
+          <h1>塑迹<br />运营管理台</h1>
+          <p>
+            这是给桌面端准备的轻量管理控制台，方便你在电脑上审批教练申请、分配学员关系、查询用户与运营状态。
+            设计上保持和小程序同一套暖色训练视觉，但交互更偏运营面板。
+          </p>
+          <div class="token-box">
+            <input id="tokenInput" placeholder="粘贴管理员 Bearer token" />
+            <button class="primary" id="saveTokenBtn">保存 Token</button>
+            <button class="secondary" id="refreshBtn">刷新全部数据</button>
+          </div>
+          <div class="footer-note">
+            Token 会保存在浏览器本地，仅供本机开发调试使用。
+          </div>
+        </div>
+        <div class="panel" style="border-radius: 28px; padding: 22px;">
+          <h3>操作提示</h3>
+          <div class="auth-banner" id="statusBanner">等待载入管理员数据</div>
+          <div class="list">
+            <div class="item">
+              <strong>1. 教练审批</strong>
+              <span>先处理待审批教练申请，通过后用户角色会自动更新为教练。</span>
+            </div>
+            <div class="item">
+              <strong>2. 学员关系配置</strong>
+              <span>从已存在用户里选择教练和普通用户，快速建立服务关系。</span>
+            </div>
+            <div class="item">
+              <strong>3. 用户搜索</strong>
+              <span>用昵称、手机号或角色过滤用户，适合快速做运营排查。</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="summary-grid">
+        <div class="metric">
+          <span>平台用户数</span>
+          <strong id="userCount">--</strong>
+        </div>
+        <div class="metric">
+          <span>待审批教练申请</span>
+          <strong id="pendingCount">--</strong>
+        </div>
+        <div class="metric">
+          <span>有效教练关系</span>
+          <strong id="relationCount">--</strong>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel">
+          <h2>教练申请</h2>
+          <div class="toolbar">
+            <input id="applicationKeyword" placeholder="搜索昵称 / 理由" />
+            <select id="applicationStatus">
+              <option value="PENDING">待审批</option>
+              <option value="APPROVED">已通过</option>
+              <option value="REJECTED">已驳回</option>
+              <option value="">全部状态</option>
+            </select>
+          </div>
+          <div class="list" id="applicationList"></div>
+        </section>
+
+        <section class="panel">
+          <h2>学员关系</h2>
+          <div class="form-stack" style="margin-top: 16px; flex-direction: column;">
+            <select id="coachSelect"></select>
+            <select id="studentSelect"></select>
+            <textarea id="relationNote" placeholder="关系备注，例如增肌周期 / 代录授权范围"></textarea>
+            <button class="primary" id="createRelationBtn">创建学员关系</button>
+          </div>
+          <div class="toolbar">
+            <input id="relationKeyword" placeholder="搜索教练 / 学员 / 备注" />
+          </div>
+          <div class="list" id="relationList"></div>
+        </section>
+
+        <section class="panel">
+          <h2>用户检索</h2>
+          <div class="toolbar">
+            <input id="userKeyword" placeholder="搜索昵称 / 手机 / ID" />
+            <select id="userRole">
+              <option value="">全部角色</option>
+              <option value="USER">普通用户</option>
+              <option value="COACH">教练</option>
+              <option value="ADMIN">管理员</option>
+            </select>
+          </div>
+          <div class="list" id="userList"></div>
+        </section>
+      </section>
+    </div>
+
+    <script>
+      const BASE_URL = localStorage.getItem('sports-tools-admin-base-url') || 'http://localhost:3000/api'
+      const state = {
+        token: localStorage.getItem('sports-tools-admin-token') || '',
+        users: [],
+        applications: [],
+        relations: [],
+      }
+
+      const els = {
+        tokenInput: document.getElementById('tokenInput'),
+        saveTokenBtn: document.getElementById('saveTokenBtn'),
+        refreshBtn: document.getElementById('refreshBtn'),
+        statusBanner: document.getElementById('statusBanner'),
+        userCount: document.getElementById('userCount'),
+        pendingCount: document.getElementById('pendingCount'),
+        relationCount: document.getElementById('relationCount'),
+        applicationKeyword: document.getElementById('applicationKeyword'),
+        applicationStatus: document.getElementById('applicationStatus'),
+        applicationList: document.getElementById('applicationList'),
+        coachSelect: document.getElementById('coachSelect'),
+        studentSelect: document.getElementById('studentSelect'),
+        relationNote: document.getElementById('relationNote'),
+        createRelationBtn: document.getElementById('createRelationBtn'),
+        relationKeyword: document.getElementById('relationKeyword'),
+        relationList: document.getElementById('relationList'),
+        userKeyword: document.getElementById('userKeyword'),
+        userRole: document.getElementById('userRole'),
+        userList: document.getElementById('userList'),
+      }
+
+      els.tokenInput.value = state.token
+
+      const baseUrlInput = document.createElement('input')
+      baseUrlInput.placeholder = '可选：自定义 API Base，例如 https://api.example.com/api'
+      baseUrlInput.value = BASE_URL
+      baseUrlInput.style.marginTop = '10px'
+      els.tokenInput.parentElement.appendChild(baseUrlInput)
+
+      function setStatus(text, isError = false) {
+        els.statusBanner.textContent = text
+        els.statusBanner.style.background = isError ? 'rgba(173, 75, 49, 0.14)' : 'rgba(47, 125, 108, 0.12)'
+        els.statusBanner.style.color = isError ? '#7c2f1d' : '#2b5f53'
+      }
+
+      async function api(path, options = {}) {
+        const response = await fetch(`${BASE_URL}${path}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: state.token ? `Bearer ${state.token}` : '',
+            ...(options.headers || {}),
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        return response.json()
+      }
+
+      function optionHtml(items, placeholder, filter) {
+        const list = items.filter(filter)
+        return [`<option value="">${placeholder}</option>`]
+          .concat(list.map((item) => `<option value="${item.id}">${item.nickname || item.id} · ${item.role}${item.phone ? ` · ${item.phone}` : ''}</option>`))
+          .join('')
+      }
+
+      function renderUsers() {
+        els.userCount.textContent = state.users.total || 0
+        els.coachSelect.innerHTML = optionHtml(state.users.items || [], '选择教练', (item) => item.role === 'COACH' || item.role === 'ADMIN')
+        els.studentSelect.innerHTML = optionHtml(state.users.items || [], '选择学员', (item) => item.role === 'USER')
+        els.userList.innerHTML = (state.users.items || []).length
+          ? state.users.items.map((item) => `
+            <div class="item">
+              <strong>${item.nickname || item.id}</strong>
+              <span>角色：${item.role}</span>
+              <span>手机号：${item.phone || '未绑定'}</span>
+              <span>ID：${item.id}</span>
+            </div>
+          `).join('')
+          : '<div class="empty">当前条件下没有用户数据。</div>'
+      }
+
+      function renderApplications() {
+        const pending = (state.applications.items || []).filter((item) => item.status === 'PENDING').length
+        els.pendingCount.textContent = pending
+        els.applicationList.innerHTML = (state.applications.items || []).length
+          ? state.applications.items.map((item) => `
+            <div class="item">
+              <strong>${item.user?.nickname || item.user?.id || '未知用户'}</strong>
+              <span class="status">状态：${item.status}</span>
+              <span>${item.reason}</span>
+              ${item.status === 'PENDING' ? `
+                <div class="action-row" style="margin-top: 12px;">
+                  <button class="approve" data-approve="${item.id}">通过</button>
+                  <button class="danger" data-reject="${item.id}">驳回</button>
+                </div>
+              ` : `<div class="pill">已处理申请</div>`}
+            </div>
+          `).join('')
+          : '<div class="empty">当前条件下没有教练申请。</div>'
+      }
+
+      function renderRelations() {
+        els.relationCount.textContent = state.relations.total || 0
+        els.relationList.innerHTML = (state.relations.items || []).length
+          ? state.relations.items.map((item) => `
+            <div class="item">
+              <strong>${item.coach?.nickname || item.coach?.id} -> ${item.student?.nickname || item.student?.id}</strong>
+              <span>教练：${item.coach?.phone || '未绑定手机号'} | 学员：${item.student?.phone || '未绑定手机号'}</span>
+              <span>${item.note || '无备注'}</span>
+            </div>
+          `).join('')
+          : '<div class="empty">当前条件下没有关系数据。</div>'
+      }
+
+      async function loadAll() {
+        if (!state.token) {
+          setStatus('请先粘贴管理员 token 再加载数据', true)
+          return
+        }
+
+        setStatus('正在拉取管理数据...')
+
+        try {
+          const [users, applications, relations] = await Promise.all([
+            api(`/admin/users?keyword=${encodeURIComponent(els.userKeyword.value)}&role=${encodeURIComponent(els.userRole.value)}&page=1&pageSize=50`),
+            api(`/admin/coach-applications?keyword=${encodeURIComponent(els.applicationKeyword.value)}&status=${encodeURIComponent(els.applicationStatus.value)}&page=1&pageSize=20`),
+            api(`/admin/relations?keyword=${encodeURIComponent(els.relationKeyword.value)}&page=1&pageSize=20`),
+          ])
+
+          state.users = users
+          state.applications = applications
+          state.relations = relations
+
+          renderUsers()
+          renderApplications()
+          renderRelations()
+          setStatus('管理数据已刷新')
+        } catch (error) {
+          setStatus(`加载失败：${error.message}`, true)
+        }
+      }
+
+      async function review(id, status) {
+        try {
+          await api(`/admin/coach-applications/${id}/review`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status, reviewNote: status === 'REJECTED' ? '当前资料暂不满足审批要求' : '' }),
+          })
+          await loadAll()
+        } catch (error) {
+          setStatus(`审批失败：${error.message}`, true)
+        }
+      }
+
+      async function createRelation() {
+        try {
+          await api('/admin/relations', {
+            method: 'POST',
+            body: JSON.stringify({
+              coachId: els.coachSelect.value,
+              studentId: els.studentSelect.value,
+              note: els.relationNote.value,
+            }),
+          })
+          els.relationNote.value = ''
+          await loadAll()
+        } catch (error) {
+          setStatus(`创建关系失败：${error.message}`, true)
+        }
+      }
+
+      els.saveTokenBtn.addEventListener('click', () => {
+        state.token = els.tokenInput.value.trim()
+        localStorage.setItem('sports-tools-admin-token', state.token)
+        localStorage.setItem('sports-tools-admin-base-url', baseUrlInput.value.trim() || 'http://localhost:3000/api')
+        setStatus('Token 已保存，可以开始拉取数据')
+      })
+
+      els.refreshBtn.addEventListener('click', loadAll)
+      els.applicationKeyword.addEventListener('change', loadAll)
+      els.applicationStatus.addEventListener('change', loadAll)
+      els.userKeyword.addEventListener('change', loadAll)
+      els.userRole.addEventListener('change', loadAll)
+      els.relationKeyword.addEventListener('change', loadAll)
+      els.createRelationBtn.addEventListener('click', createRelation)
+      els.applicationList.addEventListener('click', (event) => {
+        const target = event.target
+        if (!(target instanceof HTMLElement)) return
+        if (target.dataset.approve) review(target.dataset.approve, 'APPROVED')
+        if (target.dataset.reject) review(target.dataset.reject, 'REJECTED')
+      })
+
+      if (state.token) {
+        loadAll()
+      } else {
+        setStatus('请先粘贴管理员 token', true)
+      }
+    </script>
+  </body>
+  </html>
